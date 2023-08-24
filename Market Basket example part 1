@@ -1,0 +1,80 @@
+###########################################################################
+# Exemplo de aplicação do método Association Rules Mining, que identifica itens e 
+# conjunto de itens frequentes em dados 'transacionais', muito utilizado em
+# sistemas de recomendação
+##########################################################################
+
+## setup do diretório de trabalho
+
+getwd()
+setwd("C:/Users")
+
+## Instalando as bibliotecas necessárias
+
+install.packages("arules")
+library(arules)
+library(ggplot2)
+library(arulesViz)
+
+## Carregando os dados para servir de exemplo
+data(Groceries)
+class(Groceries)
+inspect(head(Groceries,3))
+
+dfm = as(Groceries, "matrix")
+df = data.frame(dfm)
+head(df,2)
+colnames(df)
+
+## Pequena análise descritiva dos dados
+
+freq.items = eclat (Groceries, parameter = list(supp = 0.07, maxlen = 15))
+
+itemFrequencyPlot(Groceries, topN=10, type="absolute", main="Itens mais comprados")
+
+## Gerando o Association Rules Mining
+
+rules = apriori (Groceries, parameter = list(supp = 0.005, conf = 0.4))
+# parâmetro support >= 0.005, e confidence >= 0.4
+
+rules_conf = sort (rules, by="confidence", decreasing=TRUE)
+inspect(head(rules_conf))
+
+rules_lift = sort (rules, by="lift", decreasing=TRUE)
+inspect(head(rules_lift))
+
+## Data Vizualisation
+
+plot(rules_conf[1:20], method = "graph", measure = "confidence", 
+     shading = "lift")
+
+plot(rules_lift[1:20], method = "graph", measure = "confidence", shading = "lift")
+
+## Minerando as principais configurações de quem compra 'whole milk'
+
+rules.milk = apriori (Groceries, parameter = list(supp = 0.001, conf = 0.1),
+                       minlen = 2,
+                       appearance = list( lhs = "whole milk" , default = "rhs"))
+
+rules.milk.conf = sort (rules.milk, by="confidence", decreasing=TRUE)
+
+inspect(head(rules.milk.conf, 10))
+
+plot(rules.milk.conf[1:15], method = "graph", measure = "confidence", 
+     shading = "lift")
+
+
+## Minerando as principais configurações que levam a comprar 'tropical fruit'
+
+rules.fruit = apriori (Groceries, parameter = list(supp = 0.001, conf = 0.2),
+                       minlen = 2,
+                       maxlen = 2,
+                       appearance = list(default = 'lhs' , rhs = "tropical fruit"))
+
+rules.fruit.conf = sort (rules.fruit, by="confidence", decreasing=TRUE)
+
+inspect(head(rules.fruit.conf, 10))
+
+plot(rules.fruit.conf[1:15], method = "graph", measure = "confidence", 
+     shading = "lift")
+
